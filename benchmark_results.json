@@ -1,0 +1,15 @@
+{
+  "true_inertia_ratios": [
+    0.4997774948919448,
+    0.9027338634720413
+  ],
+  "cfin_inferred_inertia": [
+    0.17841485142707825,
+    0.7184447050094604
+  ],
+  "nnekf_nominal_error_deg": 1.5389861789115031,
+  "plain_nominal_error_deg": 1.5389861789115031,
+  "nnekf_dropout_error_deg": 8.31820726336758,
+  "plain_dropout_error_deg": 3.5529643449599413,
+  "drift_reduction_ratio": 0.42713101903661194
+}

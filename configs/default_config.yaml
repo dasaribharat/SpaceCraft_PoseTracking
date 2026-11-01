@@ -1,0 +1,61 @@
+# Default Configuration for Tumbling Space Debris Pose & Motion Tracking Pipeline
+
+camera:
+  image_width: 1920
+  image_height: 1200
+  crop_size: 224              # Input size for ViT backbone
+  aspect_ratio_factor: 1.6   # SPEED / SPEED+ aspect ratio correction (alpha)
+  fx: 1920.0
+  fy: 1920.0
+  cx: 960.0
+  cy: 600.0
+  fps: 10.0
+
+stage1_fastpose_vit:
+  backbone: "vit_tiny_patch16_224"  # ViT architecture (lightweight for edge compute)
+  embed_dim: 192
+  depth: 6
+  num_heads: 4
+  mlp_ratio: 4.0
+  in_channels: 3
+  regress_apparent_rotation: true   # Decouple perspective via Rodrigues correction
+  bbox_jitter_ratio: 0.10          # +/- 10% bounding box perturbation
+  spatial_aug_prob: 0.50           # In-plane rotation augmentation probability
+  learning_rate: 1.0e-4
+  weight_decay: 0.0                # Muon / FastPose paper: weight decay degrades pose regression
+  batch_size: 16
+
+space_augmentations:
+  harsh_sun_glare_prob: 0.4
+  deep_shadow_prob: 0.4
+  specular_saturation_prob: 0.3
+  stray_light_moon_prob: 0.2
+  stray_light_earth_prob: 0.2
+  star_field_prob: 0.3
+
+stage2_motion:
+  window_size: 7             # Frames for local smoothing
+  poly_order: 2              # Savitzky-Golay polynomial order
+  enforce_sign_continuity: true
+
+stage3_cfin:
+  sequence_length: 500       # Number of quaternion frames for DFT (NNEKF paper: 200-500)
+  num_dominant_peaks: 3      # f1, f2, f3 dominant tumbling frequencies
+  input_dim: 15              # 3 frequencies + 12 peak heights (4 quat components * 3 peaks)
+  hidden_dim: 100            # Hidden layer nodes (Ma et al. Section 3.2)
+  output_dim: 2              # Inertia ratios: Jxx/Jzz, Jyy/Jzz
+  activation: "sinh"         # Hyperbolic sine / tanh activation as per paper
+  num_training_sequences: 10000
+
+stage4_nnekf:
+  state_dim: 8               # [qv (3), omega (3), y (2)]
+  dt: 0.1                    # 10 Hz nominal timestep
+  # Process noise covariances
+  q_attitude: 1.0e-5
+  q_angular_velocity: 1.0e-4
+  q_inertia: 1.0e-7
+  # Measurement noise covariances
+  r_attitude: 2.5e-3         # Vision quaternion measurement variance
+  r_inertia_virtual: 5.0e-3  # CFIN virtual observation variance
+  # Dropout handling
+  max_dropout_steps: 300     # Propagate through up to 30 seconds (at 10Hz) without camera

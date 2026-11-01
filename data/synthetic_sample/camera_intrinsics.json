@@ -1,0 +1,10 @@
+{
+  "image_width": 640,
+  "image_height": 480,
+  "aspect_ratio_correction_factor": 1.0,
+  "fx": 640.0,
+  "fy": 640.0,
+  "cx": 320.0,
+  "cy": 240.0,
+  "fps": 10.0
+}
